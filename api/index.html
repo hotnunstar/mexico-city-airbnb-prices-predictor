@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airbnb Price Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+            text-align: center;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"]:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .amenities-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 10px;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        
+        .checkbox-label:hover {
+            background-color: #f8f9fa;
+        }
+        
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-radius: 12px;
+            text-align: center;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .result-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .price {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #fee;
+            border-left: 4px solid #f44;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            color: #c33;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 Airbnb Price Predictor</h1>
+        
+        <form id="predictionForm">
+            <!-- Property Details -->
+            <div class="form-section">
+                <div class="section-title">Property Details</div>
+                
+                <div class="form-group">
+                    <label for="accommodates">Accommodates</label>
+                    <input type="number" id="accommodates" name="accommodates" min="1" max="16" value="4" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bedrooms">Bedrooms</label>
+                    <input type="number" id="bedrooms" name="bedrooms" min="0" max="10" value="2" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="beds">Beds</label>
+                    <input type="number" id="beds" name="beds" min="0" max="20" value="2" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bathrooms">Bathrooms</label>
+                    <input type="number" id="bathrooms" name="bathrooms" min="0" max="10" value="1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="neighbourhood">Neighbourhood (optional)</label>
+                    <input type="text" id="neighbourhood" name="neighbourhood" placeholder="e.g., Cuauhtémoc">
+                </div>
+            </div>
+            
+            <!-- Amenities -->
+            <div class="form-section">
+                <div class="section-title">Amenities</div>
+                <div class="amenities-grid">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="has_kitchen" value="1" checked>
+                        Kitchen
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="has_wifi" value="1" checked>
+                        WiFi
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="has_hot_water" value="1" checked>
+                        Hot Water
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="has_hangers" value="1">
+                        Hangers
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="has_microwave" value="1">
+                        Microwave
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="has_hair_dryer" value="1">
+                        Hair Dryer
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="has_shampoo" value="1">
+                        Shampoo
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="has_tv" value="1" checked>
+                        TV
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="has_smoke_alarm" value="1">
+                        Smoke Alarm
+                    </label>
+                </div>
+            </div>
+            
+            <button type="submit">🔮 Predict Price</button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="color: #666;">Calculating...</p>
+        </div>
+        
+        <div class="result" id="result">
+            <div class="result-label">Predicted Nightly Price</div>
+            <div class="price" id="predictedPrice">$0.00</div>
+        </div>
+        
+        <div class="error" id="error"></div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('predictionForm');
+        const result = document.getElementById('result');
+        const error = document.getElementById('error');
+        const loading = document.getElementById('loading');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Hide previous results
+            result.classList.remove('show');
+            error.classList.remove('show');
+            loading.classList.add('show');
+            
+            // Get form data
+            const formData = new FormData(form);
+            const data = {
+                accommodates: parseInt(formData.get('accommodates')),
+                bedrooms: parseFloat(formData.get('bedrooms')),
+                beds: parseFloat(formData.get('beds')),
+                bathrooms: parseFloat(formData.get('bathrooms')),
+                neighbourhood: formData.get('neighbourhood') || 'Unknown',
+                has_kitchen: formData.get('has_kitchen') ? 1 : 0,
+                has_wifi: formData.get('has_wifi') ? 1 : 0,
+                has_hot_water: formData.get('has_hot_water') ? 1 : 0,
+                has_hangers: formData.get('has_hangers') ? 1 : 0,
+                has_microwave: formData.get('has_microwave') ? 1 : 0,
+                has_hair_dryer: formData.get('has_hair_dryer') ? 1 : 0,
+                has_shampoo: formData.get('has_shampoo') ? 1 : 0,
+                has_tv: formData.get('has_tv') ? 1 : 0,
+                has_smoke_alarm: formData.get('has_smoke_alarm') ? 1 : 0
+            };
+            
+            try {
+                // Call API
+                const response = await fetch('/predict?' + new URLSearchParams(data), {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Prediction failed');
+                }
+                
+                const prediction = await response.json();
+                
+                // Display result
+                document.getElementById('predictedPrice').textContent = 
+                    `$${prediction.predicted_price.toFixed(2)}`;
+                
+                loading.classList.remove('show');
+                result.classList.add('show');
+                
+            } catch (err) {
+                loading.classList.remove('show');
+                error.textContent = 'Error making prediction. Please try again.';
+                error.classList.add('show');
+                console.error(err);
+            }
+        });
+    </script>
+</body>
+</html>
